@@ -1,0 +1,13 @@
+{
+	"folders": 
+	[
+		{
+			"folow_symlinks": true,
+			"path": "."
+		}
+	],
+	"settings": 
+	{
+		"python_interpreter": "/usr/bin/python3.4"
+	}
+}
