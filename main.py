@@ -21,9 +21,9 @@ KERNEL_SIZE = 3
 # Seconds per update
 LOOP_TIME = 0.5
 # How much randoly spread Life to start with
-DENSITY = 2000
+DENSITY = 1000
 # Life dies if less than or equal too
-UNDER_POP = 2
+UNDER_POP = 1
 # Life dies if greater than or equal too
 OVER_POP = 4
 GROUND = "black"
@@ -208,13 +208,19 @@ class ThreadedClient:
         print(status, end="")
 
     def kernelWeight(self, kernel):
-        sum = kernel[0][1] + kernel[1][0] + kernel[1][2] + kernel[2][1] + \
-            kernel[0][0] + kernel[0][2] + kernel[2][0] + kernel[2][2]
-        if (sum <= UNDER_POP or sum > OVER_POP):
-            return 0
+        newState = 0
+        sum = kernel[0][0] + kernel[0][1] + kernel[0][2] + \
+            kernel[1][0] + kernel[1][2] + \
+            kernel[2][0] + kernel[2][1] + kernel[2][2]
+
+        if (kernel[1][1] == 1):
+            if(sum > UNDER_POP and sum < OVER_POP):
+                newState = 1
         else:
-            self._mass += 1
-            return 1
+            if(sum == 3):
+                newState = 1
+        self._mass += newState
+        return newState
 
     def wrapWidth(self, i):
         return (
