@@ -21,13 +21,15 @@ KERNEL_SIZE = 3
 # Seconds per update
 LOOP_TIME = 0.5
 # How much randoly spread Life to start with
-DENSITY = 1000
+DENSITY = 2000
 # Life dies if less than or equal too
 UNDER_POP = 1
 # Life dies if greater than or equal too
 OVER_POP = 4
 GROUND = "black"
-LIFE = "green"
+NEW_LIFE = "#FF0000"
+OLD_LIFE = "#882244"
+STILL = "#666666"
 
 
 def initMessage():
@@ -92,6 +94,7 @@ class GuiPart:
         self.queue = queue
         # Set up the GUI
         self.master.protocol("WM_DELETE_WINDOW", endCommand)
+        self.convolution = [[0 for i in range(WIDTH)] for i in range(HEIGHT)]
         self.canvas = LifeView(self.master, width=WIDTH, height=HEIGHT)
         self.initGUI(master, WIDTH, HEIGHT)
         self.canvas.pack(side=TOP, expand=YES, fill=BOTH)
@@ -103,11 +106,37 @@ class GuiPart:
         while self.queue.qsize():
             try:
                 convolution = self.queue.get(0)
+                self.add(convolution)
                 if type(convolution) != 'NoneType':
-                    self.boardToImage(convolution)
+                    self.boardToImage()
             except Empty:
                 # No Image to render
                 pass
+
+    def clip(self, lower, upper):
+        for x in range(1, WIDTH):
+            for y in range(1, HEIGHT):
+                if(self.convolution[x][y] > upper):
+                    self.convolution[x][y] = upper
+                elif(self.convolution[x][y] < lower):
+                    self.convolution[x][y] = lower
+
+
+    def add(self, convolution):
+        self.clip(0, 2)
+        for x in range(1, WIDTH):
+            for y in range(1, HEIGHT):
+                if(self.convolution[x][y] == 2 and convolution[x][y] == 1):
+                    self.convolution[x][y] = 3
+                elif(self.convolution[x][y] and convolution[x][y]):
+                    self.convolution[x][y] = 2
+                elif(self.convolution[x][y] == 1 and convolution[x][y] == 0):
+                    self.convolution[x][y] = 0
+                elif(self.convolution[x][y] == 0 and convolution[x][y] == 1):
+                    self.convolution[x][y] = 1
+                else:
+                    self.convolution[x][y] = 0
+
 
     def setPixel(self, color, position):
         '''
@@ -119,17 +148,21 @@ class GuiPart:
             x * sx, y * sy, (x + 1) * sx, (y + 1) * sy,
             fill=color, outline=color, tag="all")
 
-    def boardToImage(self, board):
+    def boardToImage(self):
         '''
         Read convolution and render to the image
         '''
         self.canvas.delete("all")
         for x in range(0, WIDTH - 1):
             for y in range(0, HEIGHT - 1):
-                if(board[x][y] == 0):
+                if(self.convolution[x][y] == 0):
                     self.setPixel(GROUND, (x, y))
-                elif(board[x][y] == 1):
-                    self.setPixel(LIFE, (x, y))
+                elif(self.convolution[x][y] == 1):
+                    self.setPixel(NEW_LIFE, (x, y))
+                elif(self.convolution[x][y] == 2):
+                    self.setPixel(OLD_LIFE, (x, y))
+                elif(self.convolution[x][y] == 3):
+                    self.setPixel(STILL, (x, y))
 
     def initGUI(self, f, w, h):
         '''
