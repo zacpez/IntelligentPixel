@@ -235,7 +235,7 @@ class ThreadedClient:
 
     def statusLine(self):
         print('\r', end="         ")
-        status = "Age: " + str(self._lifetime) + " "
+        status = "         Age: " + str(self._lifetime) + " "
         status += "Mass: " + str(self._mass) + " "
         status += "Growth: " + str(self._growth) + "    "
         print(status, end="")
