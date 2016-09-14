@@ -1,3 +1,13 @@
+'''
+In this Agent Package there are four fundemental sub-modules.
+
+* Critic for learning feedback
+* Learning module for learning goals and performance changes
+* Performance module for knowledge and actions
+* Problem generator for learning goals
+'''
+from queue import Queue, Empty
+
 
 class AgentException(Exception):
     def __init__(self, message):
@@ -16,6 +26,52 @@ class AgentManger:
             self.actuators.append(value)
         else:
             raise AgentException("Unknown mode type")
+
+
+class CriticModule:
+    def __init__(
+            self,
+            standards,
+            perceptions):
+        self.stanards = stanards
+        self.perceptions = perceptions
+
+
+class LerningModule:
+    def __init__(
+            self,
+            feedback,
+            knowledge,
+            changes,
+            learning):
+        self.feedback = feedback
+        self.knowledge = knowledge
+        self.changes = changes
+        self.learning = learning
+
+
+class ProblemModule:
+    def __init__(
+            self,
+            learning,
+            problems):
+        self.learning = learning
+        self.problems = problems
+
+
+class PerformanceModule:
+    def __init__(
+            self,
+            senses,
+            changes,
+            problems,
+            knowledge,
+            actions):
+        self.senses = senses
+        self.changes = changes
+        self.problems = problems
+        self.knowledge = knowledge
+        self.actions = actions
 
 
 class Agent:
@@ -48,7 +104,7 @@ class Agent:
             self.actuators = actuatorMask
         else:
             self.generateActuatorMask()
-        
+
         if(type(bodyMask) != 'NoneType'):
             self.body = bodyMask
         else:
