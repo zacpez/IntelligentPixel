@@ -28,7 +28,7 @@ UNDER_POP = 1
 OVER_POP = 4
 GROUND = "black"
 NEW_LIFE = "#FF0000"
-OLD_LIFE = "#882244"
+OLD_LIFE = "#FF0000" # "#882244"
 STILL = "#666666"
 
 
@@ -113,7 +113,11 @@ class GuiPart:
                 # No Image to render
                 pass
 
-    def clip(self, lower, upper):
+    def clamp(self, lower, upper):
+        '''
+        Clamp all elements in the matrix between lower bound and upper bound
+        and the including the bounds.
+        '''
         for x in range(1, WIDTH):
             for y in range(1, HEIGHT):
                 if(self.convolution[x][y] > upper):
@@ -121,9 +125,8 @@ class GuiPart:
                 elif(self.convolution[x][y] < lower):
                     self.convolution[x][y] = lower
 
-
     def add(self, convolution):
-        self.clip(0, 2)
+        self.clamp(0, 2)
         for x in range(1, WIDTH):
             for y in range(1, HEIGHT):
                 if(self.convolution[x][y] == 2 and convolution[x][y] == 1):
@@ -136,7 +139,6 @@ class GuiPart:
                     self.convolution[x][y] = 1
                 else:
                     self.convolution[x][y] = 0
-
 
     def setPixel(self, color, position):
         '''
@@ -313,5 +315,6 @@ def main():
         window.mainloop()
     except KeyboardInterrupt:
         window.destroy()
+
 
 main()
