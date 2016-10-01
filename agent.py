@@ -14,7 +14,7 @@ class AgentException(Exception):
         super(AgentException, self).__init__(message)
 
 
-class AgentManger:
+class AgentManager:
     def __init__(self):
         self.sensors = []
         self.actuators = []
@@ -29,49 +29,55 @@ class AgentManger:
 
 
 class CriticModule:
-    def __init__(
-            self,
-            standards,
-            perceptions):
-        self.stanards = stanards
-        self.perceptions = perceptions
+    def __init__(self, queues):
+        self.stanards, self.perceptions, self.feedback = queues
+        self.applyStanards()
+
+    def applyStanards(self):
+        '''
+        The critic modules require stanrd to compare to.
+        Stanards come from outside the Agent.
+        '''
+        while self.stanards.qsize():
+            try:
+                self.apply(self.stanards.get(0))
+            except Empty:
+                # No Satanard in queue
+                pass
+
+    def process(self):
+        while self.perceptions.qsize():
+            try:
+                perception = self.perceptions.get(0)
+                feedback = self.critize(perception)
+                self.feedback.put(feedback)
+            except Empty:
+                # Nonthing to get
+                pass
+
+    def critize(self, perception):
+        feedback = ""
+        return feedback
+
+    def apply(self, stanard):
+        # Apply the standard
+        pass
 
 
-class LerningModule:
-    def __init__(
-            self,
-            feedback,
-            knowledge,
-            changes,
-            learning):
-        self.feedback = feedback
-        self.knowledge = knowledge
-        self.changes = changes
-        self.learning = learning
+class LearningModule:
+    def __init__(self, queues):
+        self.feedback, self.knowledge, self.changes, self.learning = queues
 
 
 class ProblemModule:
-    def __init__(
-            self,
-            learning,
-            problems):
-        self.learning = learning
-        self.problems = problems
+    def __init__(self, queues):
+        self.learning, self.problems = queues
 
 
 class PerformanceModule:
-    def __init__(
-            self,
-            senses,
-            changes,
-            problems,
-            knowledge,
-            actions):
-        self.senses = senses
-        self.changes = changes
-        self.problems = problems
-        self.knowledge = knowledge
-        self.actions = actions
+    def __init__(self, queues):
+        self.senses, self.changes, self.problems,
+        self.knowledge, self.actions = queues
 
 
 class Agent:
@@ -85,69 +91,39 @@ class Agent:
     '''
     def __init__(
             self,
-            manager,
-            sensorMask=None,
-            actuatorMask=None,
-            bodyMask=None):
+            manager=AgentManager(),
+            senses=Queue(),
+            actions=Queue(),
+            standards=Queue()):
         '''
         Create and supply a sensor arrangemnt for the n-types of sensors.
         Create and supply a actuators arrangemnt for the n-types of actuators.
         If a sensor and actuator arrangement is not supplied
         then they will be generated.
         '''
-        if(type(sensorMask) != 'NoneType'):
-            self.sensors = sensorMask
-        else:
-            self.generateSensorMask()
+        self.senses = senses
+        self.actions = actions
+        self.standards = standards
+        changes = Queue()
+        problems = Queue()
+        knowledge = Queue()
+        learning = Queue()
+        feedback = Queue()
+        self.perceptions = Queue()
+        self.performance = self.register(
+            PerformanceModule, [self.senses, changes, problems,
+                                knowledge, self.actions])
+        self.learning = self.register(
+            LearningModule, [feedback, knowledge, changes, learning])
+        self.critic = self.register(
+            CriticModule, [self.stanards, self.perceptions, feedback])
+        self.problem = self.register(
+            ProblemModule, [learning, problems])
 
-        if(type(actuatorMask) != 'NoneType'):
-            self.actuators = actuatorMask
-        else:
-            self.generateActuatorMask()
+    def register(self, moduleType, queues=[]):
+        module = moduleType(queues)
+        return module
 
-        if(type(bodyMask) != 'NoneType'):
-            self.body = bodyMask
-        else:
-            self.generateBodyMask()
-
-    def setSensorMask(self, sensorMask):
-        if(type(sensorMask) != 'NoneType'):
-            self.sensorMask = sensorMask
-
-    def getSensorMask(self):
-        if(type(self.sensorMask) != 'NoneType'):
-            return self.sensorMask
-        else:
-            return None
-
-    def generateSensorMask(self):
-        pass
-
-    def setActuatorMask(self, actuatorMask):
-        if(type(actuatorMask) != 'NoneType'):
-            self.actuatorMask = actuatorMask
-
-    def getActuatorMask(self):
-        if(type(self.actuatorMask) != 'NoneType'):
-            return self.actuatorMask
-        else:
-            return None
-
-    def generateActuatorMask(self):
-        pass
-
-    def setBodyMask(self, actuatorMask):
-        if(type(actuatorMask) != 'NoneType'):
-            self.actuatorMask = actuatorMask
-
-    def getBodyMask(self):
-        if(type(self.actuatorMask) != 'NoneType'):
-            return self.actuatorMask
-        else:
-            return None
-
-    def generateBodyMask(self):
-        pass
-
-    def registerType(self, mode, value):
-        self.manager.register(mode, value)
+    def senseOnce(self, input):
+        self.sense.put(input)
+        self.perceptions.put(input)
