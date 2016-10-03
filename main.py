@@ -73,7 +73,7 @@ class ThreadedClient:
         self._growth = 0
 
         # Set up the GUI part
-        self.gui = GuiPart(self.master, self.queue, self.endApplication)
+        self.gui = GuiPart(self.master, self.queue, self.endApplication, (WIDTH, HEIGHT))
 
         # Set up the worker thread
         self._running = True
