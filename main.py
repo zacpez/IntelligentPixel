@@ -57,7 +57,7 @@ def seedBoard2(width, height, density):
     return newboard
 
 
-class ThreadedClient:
+class GameofLife:
 
     def __init__(self, master):
         self.master = master
@@ -180,10 +180,10 @@ class ThreadedClient:
 def main():
     # Main Function
     window = Tk()
-    window.title("Game of Life")
+    window.title("An Intelligent Pixel")
     try:
         initMessage()
-        client = ThreadedClient(window)
+        client = GameofLife(window)
         window.mainloop()
     except KeyboardInterrupt:
         window.destroy()
