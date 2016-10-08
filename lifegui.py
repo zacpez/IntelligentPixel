@@ -1,10 +1,34 @@
 from queue import Empty
-from tkinter import Canvas, YES, NO, BOTH, TOP
+import random
+from tkinter import Canvas, YES, BOTH, TOP
 
 GROUND = "black"
 NEW_LIFE = "#FF0000"
 OLD_LIFE = "#882244"
 STILL = "#666666"
+
+
+class Seeder:
+    density = 0
+
+    @staticmethod
+    def seedBoard(width, height):
+        newboard = [[0 for i in range(width)] for j in range(height)]
+        for x in range(0, width - 1):
+            for y in range(0, height - 1):
+                newboard[x][y] = (
+                    random.randint(0, Seeder.density) // Seeder.density)
+        return newboard
+
+    @staticmethod
+    def seedBoard2(width, height):
+        newboard = [[0 for i in range(width)] for j in range(height)]
+        for i in range(0, Seeder.density):
+            x = random.randint(0, width - 1)
+            y = random.randint(0, height - 1)
+            newboard[y][x] = 1
+        return newboard
+
 
 class LifeView(Canvas):
     def __init__(self, master, **args):
@@ -65,18 +89,21 @@ class GuiPart:
                 # No Image to render
                 pass
 
-    def clip(self, lower, upper):
-        for x in range(1, self.width):
-            for y in range(1, self.height):
+    def clamp(self, lower, upper):
+        '''
+        Clamp values to lower and upper values if out of range
+        '''
+        for x in range(1, self.height):
+            for y in range(1, self.width):
                 if(self.convolution[x][y] > upper):
                     self.convolution[x][y] = upper
                 elif(self.convolution[x][y] < lower):
                     self.convolution[x][y] = lower
 
     def add(self, convolution):
-        self.clip(0, 2)
-        for x in range(1, self.width):
-            for y in range(1, self.height):
+        self.clamp(0, 2)
+        for x in range(1, self.height):
+            for y in range(1, self.width):
                 if(self.convolution[x][y] == 2 and convolution[x][y] == 1):
                     self.convolution[x][y] = 3
                 elif(self.convolution[x][y] and convolution[x][y]):
@@ -103,8 +130,8 @@ class GuiPart:
         Read convolution and render to the image
         '''
         self.canvas.delete("all")
-        for x in range(0, self.width - 1):
-            for y in range(0, self.height - 1):
+        for x in range(0, self.height - 1):
+            for y in range(0, self.width - 1):
                 if(self.convolution[x][y] == 0):
                     self.setPixel(GROUND, (x, y))
                 elif(self.convolution[x][y] == 1):

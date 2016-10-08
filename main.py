@@ -1,18 +1,15 @@
 #!/usr/bin/python3.4
+from agent import Agent
+from lifegui import GuiPart, Seeder
 import math
-import time
 import threading
-import random
+import time
 from tkinter import *
-from lifegui import GuiPart
-try:
-    from Queue import Queue, Empty
-except:
-    from queue import Queue, Empty
+from queue import Queue, Empty
 
-###
-# Constants
-###
+'''
+Constants
+'''
 # World Width
 WIDTH = 128
 # World Height
@@ -21,7 +18,7 @@ HEIGHT = 128
 KERNEL_SIZE = 3
 # Seconds per update
 LOOP_TIME = 0.5
-# How much randoly spread Life to start with
+# How much life is spread
 DENSITY = 2000
 # Life dies if less than or equal too
 UNDER_POP = 1
@@ -40,40 +37,25 @@ def initMessage():
     print('+-+-+-+  Life Tick: ' + str(LOOP_TIME) + ' seconds')
 
 
-def seedBoard(width, height, density):
-    newboard = [[0 for i in range(width)] for i in range(height)]
-    for x in range(0, width - 1):
-        for y in range(0, height - 1):
-            newboard[x][y] = random.randint(0, density) // density
-    return newboard
-
-
-def seedBoard2(width, height, density):
-    newboard = [[0 for i in range(width)] for i in range(height)]
-    for i in range(0, density):
-        x = random.randint(0, width - 1)
-        y = random.randint(0, height - 1)
-        newboard[x][y] = 1
-    return newboard
-
-
 class GameofLife:
 
     def __init__(self, master):
         self.master = master
-        self.world = seedBoard2(WIDTH, HEIGHT, DENSITY)
-
+        Seeder.density = DENSITY
+        self.world = Seeder.seedBoard2(WIDTH, HEIGHT)
+        self.a = Agent()
         # Create the convovle queue and populate with a world
         self.queue = Queue()
         self.queue.put(self.world)
 
-        self._lifetime = 0
-        self._oldMass = 0
-        self._mass = 0
-        self._growth = 0
+        self.lifetime = 0
+        self.oldMass = 0
+        self.mass = 0
+        self.growth = 0
 
         # Set up the GUI part
-        self.gui = GuiPart(self.master, self.queue, self.endApplication, (WIDTH, HEIGHT))
+        dim = (WIDTH, HEIGHT)
+        self.gui = GuiPart(self.master, self.queue, self.end, dim)
 
         # Set up the worker thread
         self._running = True
@@ -99,19 +81,19 @@ class GameofLife:
         '''
         while self._running:
             time.sleep(LOOP_TIME)
-            self._lifetime += 1
+            self.lifetime += 1
             self.world = self.convolve(self.world, WIDTH, HEIGHT)
-            self._growth = self._mass - self._oldMass
+            self.growth = self.mass - self.oldMass
             self.statusLine()
-            self._oldMass = self._mass
-            self._mass = 0
+            self.oldMass = self.mass
+            self.mass = 0
             self.queue.put(self.world)
 
     def statusLine(self):
         print('\r', end="         ")
-        status = "         Age: " + str(self._lifetime) + " "
-        status += "Mass: " + str(self._mass) + " "
-        status += "Growth: " + str(self._growth) + "    "
+        status = "         Age: " + str(self.lifetime) + " "
+        status += "Mass: " + str(self.mass) + " "
+        status += "Growth: " + str(self.growth) + "    "
         print(status, end="")
 
     def kernelWeight(self, kernel):
@@ -126,7 +108,7 @@ class GameofLife:
         else:
             if(sum == 3):
                 newState = 1
-        self._mass += newState
+        self.mass += newState
         return newState
 
     def wrapWidth(self, i):
@@ -139,8 +121,8 @@ class GameofLife:
 
     # Wrapped edge Game of Life
     def convolve(self, instant, width, height):
-        kernel = [[0 for i in range(KERNEL_SIZE)] for i in range(KERNEL_SIZE)]
-        nextInstant = [[0 for i in range(width)] for i in range(height)]
+        kernel = [[0 for i in range(KERNEL_SIZE)] for j in range(KERNEL_SIZE)]
+        nextInstant = [[0 for i in range(width)] for j in range(height)]
         for xpos in range(0, WIDTH - 1):
             for ypos in range(0, HEIGHT - 1):
                 left = self.wrapWidth(xpos - 1)
@@ -169,7 +151,7 @@ class GameofLife:
                 nextInstant[xpos][ypos] = self.kernelWeight(kernel)
         return nextInstant
 
-    def endApplication(self):
+    def end(self):
         '''
         End the convolution loop
         '''
