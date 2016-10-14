@@ -17,7 +17,7 @@ HEIGHT = 128
 # Don't Change
 KERNEL_SIZE = 3
 # Seconds per update
-LOOP_TIME = 0.5
+LOOP_TIME = 0.2
 # How much life is spread
 DENSITY = 2000
 # Life dies if less than or equal too

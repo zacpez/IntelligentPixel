@@ -3,9 +3,9 @@ import random
 from tkinter import Canvas, YES, BOTH, TOP
 
 GROUND = "black"
-NEW_LIFE = "#FF0000"
-OLD_LIFE = "#882244"
-STILL = "#666666"
+OLD_LIFE = STILL = NEW_LIFE = "#FF0000"
+# OLD_LIFE = "#882244"
+# STILL = "#666666"
 
 
 class Seeder:
@@ -93,8 +93,8 @@ class GuiPart:
         '''
         Clamp values to lower and upper values if out of range
         '''
-        for x in range(1, self.height):
-            for y in range(1, self.width):
+        for x in range(0, self.height - 1):
+            for y in range(0, self.width - 1):
                 if(self.convolution[x][y] > upper):
                     self.convolution[x][y] = upper
                 elif(self.convolution[x][y] < lower):
@@ -102,8 +102,8 @@ class GuiPart:
 
     def add(self, convolution):
         self.clamp(0, 2)
-        for x in range(1, self.height):
-            for y in range(1, self.width):
+        for x in range(0, self.height - 1):
+            for y in range(0, self.width - 1):
                 if(self.convolution[x][y] == 2 and convolution[x][y] == 1):
                     self.convolution[x][y] = 3
                 elif(self.convolution[x][y] and convolution[x][y]):
