@@ -1,14 +1,19 @@
 from queue import Empty
 import random
+from lifekeys import MessageKey as MK
 from tkinter import Canvas, YES, BOTH, TOP
 
 GROUND = "black"
 OLD_LIFE = STILL = NEW_LIFE = "#FF0000"
+PIXEL = "#0000FF"
 # OLD_LIFE = "#882244"
 # STILL = "#666666"
 
 
 class Seeder:
+    '''
+    Initialiaze the seeder by setting the density, then run a seed method.
+    '''
     density = 0
 
     @staticmethod
@@ -31,6 +36,9 @@ class Seeder:
 
 
 class LifeView(Canvas):
+    '''
+    LifeView is derived to handle resize events specifically
+    '''
     def __init__(self, master, **args):
         Canvas.__init__(self, master, **args)
         self.bind("<Configure>", self.onResize)
@@ -57,18 +65,23 @@ class LifeView(Canvas):
         return (self.width / self.oWidth, self.height / self.oHeight)
 
 
-class GuiPart:
-
+class GuiComponent:
+    '''
+    The GUI events and logic is dispatched from the over arching object.
+    '''
     def __init__(self, master, queue, endCommand, dim):
         self.master = master
-        self.queue = queue
+        self.renderElements = queue
         self.width, self.height = dim
+
+        self.px = self.py = 0
+
         # Set up the GUI
         self.master.protocol("WM_DELETE_WINDOW", endCommand)
-        self.convolution = [
+        self.world = [
             [0 for i in range(self.width)] for i in range(self.height)]
         self.canvas = LifeView(
-            self.master, width=self.width, height=self.height)
+            self.master, width=self.width - 1, height=self.height - 1)
         self.initGUI(master, self.width, self.height)
         self.canvas.pack(side=TOP, expand=YES, fill=BOTH)
 
@@ -77,17 +90,18 @@ class GuiPart:
 
     def processIncoming(self):
         '''
-        While convolutions are computed and sent, render them
+        While world's computed and sent, render the cells
         '''
-        while self.queue.qsize():
-            try:
-                convolution = self.queue.get(0)
-                self.add(convolution)
-                if type(convolution) != 'NoneType':
-                    self.boardToImage()
-            except Empty:
-                # No Image to render
-                pass
+        while self.renderElements.qsize() > 0:
+            drawMessage = self.renderElements.get(0)
+            key, world = drawMessage
+
+            if(MK.isKey(drawMessage, MK.WORLD)):
+                self.world = world
+
+            elif(MK.isKey(drawMessage, MK.AGENT)):
+                self.px, self.py = world
+        self.boardToImage()
 
     def clamp(self, lower, upper):
         '''
@@ -95,29 +109,33 @@ class GuiPart:
         '''
         for x in range(0, self.height - 1):
             for y in range(0, self.width - 1):
-                if(self.convolution[x][y] > upper):
-                    self.convolution[x][y] = upper
-                elif(self.convolution[x][y] < lower):
-                    self.convolution[x][y] = lower
+                if(self.world[x][y] > upper):
+                    self.world[x][y] = upper
+                elif(self.world[x][y] < lower):
+                    self.world[x][y] = lower
 
-    def add(self, convolution):
+    def add(self, world):
+        '''
+        Colour value changes.
+        '''
         self.clamp(0, 2)
         for x in range(0, self.height - 1):
             for y in range(0, self.width - 1):
-                if(self.convolution[x][y] == 2 and convolution[x][y] == 1):
-                    self.convolution[x][y] = 3
-                elif(self.convolution[x][y] and convolution[x][y]):
-                    self.convolution[x][y] = 2
-                elif(self.convolution[x][y] == 1 and convolution[x][y] == 0):
-                    self.convolution[x][y] = 0
-                elif(self.convolution[x][y] == 0 and convolution[x][y] == 1):
-                    self.convolution[x][y] = 1
+                if(self.world[x][y] == 2 and world[x][y] == 1):
+                    self.world[x][y] = 3
+                elif(self.world[x][y] and world[x][y]):
+                    self.world[x][y] = 2
+                elif(self.world[x][y] == 1 and world[x][y] == 0):
+                    self.world[x][y] = 0
+                elif(self.world[x][y] == 0 and world[x][y] == 1):
+                    self.world[x][y] = 1
                 else:
-                    self.convolution[x][y] = 0
+                    self.world[x][y] = 0
 
     def setPixel(self, color, position):
         '''
         Set alive cells to white, and dead ones to black
+        TODO: update rectangle, rather than create
         '''
         x, y = position
         sx, sy = self.canvas.getScale()
@@ -127,19 +145,16 @@ class GuiPart:
 
     def boardToImage(self):
         '''
-        Read convolution and render to the image
+        Read world and render to the image
         '''
         self.canvas.delete("all")
         for x in range(0, self.height - 1):
             for y in range(0, self.width - 1):
-                if(self.convolution[x][y] == 0):
+                if(self.world[x][y] == 0):
                     self.setPixel(GROUND, (x, y))
-                elif(self.convolution[x][y] == 1):
+                else:
                     self.setPixel(NEW_LIFE, (x, y))
-                elif(self.convolution[x][y] == 2):
-                    self.setPixel(OLD_LIFE, (x, y))
-                elif(self.convolution[x][y] == 3):
-                    self.setPixel(STILL, (x, y))
+        self.setPixel(PIXEL, (self.px, self.py))
 
     def initGUI(self, f, w, h):
         '''
