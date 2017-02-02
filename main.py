@@ -104,20 +104,20 @@ class GameofLife:
                 key, pos = message
 
                 if(MK.isKey(message, MK.KILL)):
-                    # print("kill: " + str(pos))
                     self.world[pos[0]][pos[1]] = 0
 
             self.growth = self.mass - self.oldMass
-            self.statusLine()
-            self.agent.statusLine()
+            self.statusLine(self.agent.energy)
             self.oldMass = self.mass
             self.mass = 0
 
-    def statusLine(self):
-        status = "         Age: " + str(self.lifetime) + " "
-        status += "Mass: " + str(self.mass) + " "
-        status += "Growth: " + str(self.growth) + "    "
-        print(status)
+    def statusLine(self, energy):
+        print('\r', end="         ")
+        status =  "Energy: " + str(energy) + " "
+        status += "Age: " + str(self.lifetime) + " "
+        status += "World Mass: " + str(self.mass) + " "
+        status += "World Growth: " + str(self.growth) + " "
+        print(status, end="")
 
     def kernelWeight(self, kernel):
         newState = 0

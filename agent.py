@@ -206,8 +206,6 @@ class LearningModule:
         else:
             energy -= 1
 
-        print(str(position) + ": " + str(invalid[1]))
-
         self.changes.put((MK.ENERGY, energy))
 
         self.action = valid[0]
@@ -494,7 +492,7 @@ class Agent:
         return moduleType(queues)
 
     def statusLine(self):
-        print("Energy:" + str(self.energy) + "")
+        print("\r", end="Energy:" + str(self.energy) + "")
 
     def processIncoming(self):
         '''
